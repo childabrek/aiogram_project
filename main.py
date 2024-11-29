@@ -1,40 +1,23 @@
+import aiogram
 import logging
 import asyncio
-from sched import scheduler
-
 from aiogram import Dispatcher, Bot, types
-from aiogram.filters import Command, Filter
-from aiogram.types import FSInputFile
+from aiogram.types import ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
 
 logging.basicConfig(level=logging.INFO)
-TOKEN = '8122833408:AAFdg78LuB8AJFWUFaeU4pB8bMJB_uBM3Lo'
-
+TOKEN = '7252389655:AAEmtpYiwFYGALtHEZC9vpUhB0KJxV9euj0'
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-#zet
+bot = Bot(token=TOKEN)
 
-@dp.message(Command("start"))
-async def start(message: types.Message):
-    await message.reply('Hello world!' + message.from_user.username, parse_mode='pre-formatted fixed-width code block')
+list_student= {"Илья": "ФИО, Дата рождения, номер телефона, серия номер паспорта"}
 
-
-@dp.message()
-async def echo(message: types.Message):
-    a = FSInputFile("1.jpg")
-    await message.answer_photo(a)
-
-# Илья Маслов
-async def wake_up_members():
-    await bot.send_message(chat_id='-1002312275639', text="Время вставать!")
-
-
-scheduler.add_job(wake_up_members, 'cron', hour=13, minute=39)
-
-
-async def start_dp():
-    await dp.start_polling(bot)
-
+@dp.message(F.text, Command('test'))
+async def start(message: types.Message, my_cakkback=None):
+    dox = InlineKeyboardButton
+    dox.row(types.InlineKeyboardButton(text="Найти", URL="")
+    await message.answer(parse_mode=ParseMode.MARDOWN_V2, replay_markup=builder.as_markup())
 
 if __name__ == '__main__':
     asyncio.run(start_dp())
