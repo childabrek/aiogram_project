@@ -1,5 +1,7 @@
 import logging
 import asyncio
+from sched import scheduler
+
 from aiogram import Dispatcher, Bot, types
 from aiogram.filters import Command, Filter
 from aiogram.types import FSInputFile
@@ -21,6 +23,12 @@ async def echo(message: types.Message):
     a = FSInputFile("1.jpg")
     await message.answer_photo(a)
 
+# Илья Маслов
+async def wake_up_members():
+    await bot.send_message(chat_id='-1002312275639', text="Время вставать!")
+
+
+scheduler.add_job(wake_up_members, 'cron', hour=13, minute=39)
 
 
 async def start_dp():
