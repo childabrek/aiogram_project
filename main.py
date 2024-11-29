@@ -12,6 +12,7 @@ TOKEN = '8122833408:AAFdg78LuB8AJFWUFaeU4pB8bMJB_uBM3Lo'
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
+#zet
 
 @dp.message(Command("start"))
 async def start(message: types.Message):
