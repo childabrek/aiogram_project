@@ -11,6 +11,7 @@ a = '7879535551:AAHIBTSqKL_F63fHMhhy9--xW5hNuNTmUb4'
 
 bot = Bot(token=a)
 dp = Dispatcher()
+# Привет это Арслан
 
 
 @dp.message(Command('lessons'))
