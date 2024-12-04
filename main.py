@@ -1,11 +1,5 @@
-import logging
-import asyncio
-from sched import scheduler
-
-from aiogram import Dispatcher, Bot, types
-from aiogram.filters import Filter
 from aiogram import F
-from aiogram.types import Message, FSInputFile, inline_query_results_button, ReplyKeyboardMarkup
+from aiogram.types import Message, FSInputFile, inline_query_results_button, ReplyKeyboardMarkup, Update
 from aiogram.filters import Command
 from aiogram.enums import ParseMode
 import yandex_weather_api
@@ -16,11 +10,22 @@ TOKEN = '8122833408:AAFdg78LuB8AJFWUFaeU4pB8bMJB_uBM3Lo'
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# Привет это Никита
+# floydmacflurry
+messages_history = []
+MAX_HISTORY_LENGTH = 100
+@dp.message()
+async def generate_combined_message(message: Message):
+    global messages_history
+    messages_history.append(message.text)
+    if len(messages_history) > MAX_HISTORY_LENGTH:
+        messages_history.pop(0)
+    if len(messages_history) >= 5:
+        selected_messages = random.sample(messages_history, 5)
+        words = [word for msg in selected_messages for word in msg.split()]
+        combined_message = ' '.join(words[:10])
+        if random.randint(0, 1) == 1:
+            await bot.send_message(chat_id=message.chat.id, text=combined_message)
 
-# keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, keyboard=[])
-#
-# keyboard.
 
 class MyFilter(Filter):
     def __init__(self, my_text: str) -> None:
