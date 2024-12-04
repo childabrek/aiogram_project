@@ -19,7 +19,7 @@ async def start(message: types.Message):
     driver = webdriver.Chrome()
     driver.get("https://journal.top-academy.ru/ru/main/schedule/page/index")
 
-    time.sleep(6)
+    time.sleep(10)
 
     username_input = driver.find_element(By.NAME, 'username')
     username_input.send_keys('Husnu_ii62')
