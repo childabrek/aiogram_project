@@ -11,9 +11,10 @@ from aiogram.enums import ParseMode
 import yandex_weather_api
 
 logging.basicConfig(level=logging.INFO)
-TOKEN = '8122833408:AAFdg78LuB8AJFWUFaeU4pB8bMJB_uBM3Lo'
 
-bot = Bot(token=TOKEN)
+import password
+
+bot = Bot(token=password.TOKEN)
 dp = Dispatcher()
 
 # Привет это Никита
@@ -38,22 +39,19 @@ async def start(message: types.Message):
 
 @dp.message(F.text, Command("test"))
 async def any_message(message: Message):
-    a = FSInputFile.read
-    await message.answer(
-        "Hello, ```world```\!",
-        parse_mode=ParseMode.MARKDOWN_V2
-    )
+    a = FSInputFile('123.txt')
+    await message.answer_document(a)
 
 # Илья Маслов
 async def wake_up_members():
     await bot.send_message(chat_id='-1002312275639', text="Время вставать!")
 
 
-@dp.message(MyFilter("Хакнуть Илью"))
-async def hack(message: Message):
-    await message.answer(message.text.split()[1])
-
-scheduler.add_job(wake_up_members, 'cron', hour=13, minute=39)
+# @dp.message(MyFilter("Хакнуть Илью"))
+# async def hack(message: Message):
+#     await message.answer(message.text.split()[1])
+#
+# scheduler.add_job(wake_up_members, 'cron', hour=13, minute=39)
 
 
 async def start_dp():
