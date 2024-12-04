@@ -10,11 +10,10 @@ from aiogram.types import Message, FSInputFile, inline_query_results_button, Rep
 from aiogram.filters import Command
 from aiogram.enums import ParseMode
 import yandex_weather_api
+import password
 
 logging.basicConfig(level=logging.INFO)
-TOKEN = '8122833408:AAFdg78LuB8AJFWUFaeU4pB8bMJB_uBM3Lo'
-
-bot = Bot(token=TOKEN)
+bot = Bot(token=password.TOKEN)
 dp = Dispatcher()
 
 # floydmacflurry
