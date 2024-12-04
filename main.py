@@ -12,7 +12,7 @@ dp = Dispatcher()
 bot = Bot(token=TOKEN)
 
 list_student= {"Илья": "ФИО, Дата рождения, номер телефона, серия номер паспорта"}
-# ahhfafdasfsdfsdhae
+# ahhfafdasfsdfsdhaehgjghj
 @dp.message(F.text, Command('test'))
 async def start(message: types.Message, my_cakkback=None):
     dox = InlineKeyboardButton
