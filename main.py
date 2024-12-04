@@ -1,7 +1,11 @@
 import logging
 import asyncio
 from sched import scheduler
-
+import asyncio
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters import Command
+from aiogram.fsm.state import StatesGroup, State
+from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram import Dispatcher, Bot, types
 from aiogram.filters import Filter
 from aiogram import F
@@ -14,6 +18,7 @@ logging.basicConfig(level=logging.INFO)
 TOKEN = '8122833408:AAFdg78LuB8AJFWUFaeU4pB8bMJB_uBM3Lo'
 
 bot = Bot(token=TOKEN)
+storage = MemoryStorage()
 dp = Dispatcher()
 
 # Привет это Никита
@@ -28,6 +33,52 @@ class MyFilter(Filter):
 
     async def __call__(self, message: Message) -> bool:
         return message.text == self.my_text
+
+
+
+class Form(StatesGroup):
+    choice = State()
+
+# Данила Дунаев
+@dp.message(Command('list'))
+async def cmd_start(message: types.Message):
+    keyboard = types.ReplyKeyboardMarkup(
+        keyboard=[
+            [types.KeyboardButton(text="Студенты")],
+            [types.KeyboardButton(text="Преподаватели")]
+        ],
+        resize_keyboard=True
+    )
+    await message.answer("Выберите категорию: Студенты или Преподаватели", reply_markup=keyboard)
+
+
+@dp.message(lambda message: message.text in ["Студенты", "Преподаватели"])
+async def process_choice(message: types.Message, state: State):
+    students = [
+        "Марат Бакаев", "Артур Биккузин", "Егор Брынза", "Роза Валеева", "Владислав Васильев",
+        "Данила Дунаев", "Ралим Ибатуллин", "Артем Карпенко", "Илья Маслов", "Ярослав Палехов",
+        "Илья Парфенов", "Кирилл Слепнев", "Софья Соколова", "Наиль Шириев", "Артем Ченцов",
+        "Фаезбек Хамрабаев", "Арслан Хуснутдинов", "Хаял Эйвазов"
+    ]
+
+    teachers = [
+        "Никита Владиславович", "Владимир Владимирович",
+        "Виктория Александровна", "Венера Баязитовна",
+        "Светлана Александровна", "Эльвира Ранифовна",
+        "Гузель Ирмаковна", "Альберт Вагизович",
+        "Евгения Евгеньевна"
+    ]
+
+    if message.text == "Студенты":
+        await message.answer("Список студентов:\n" + "\n".join(students), reply_markup=types.ReplyKeyboardRemove())
+    elif message.text == "Преподаватели":
+        await message.answer("Список преподавателей:\n" + "\n".join(teachers), reply_markup=types.ReplyKeyboardRemove())
+
+    @dp.message()
+    async def unknown_message(message: types.Message):
+        await message.answer("")
+
+    await state.finish()
 
 
 @dp.message(Command("start"))
