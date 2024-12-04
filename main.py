@@ -6,9 +6,10 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 logging.basicConfig(level=logging.INFO)
-TOKEN = '8122833408:AAFdg78LuB8AJFWUFaeU4pB8bMJB_uBM3Lo'
 
-bot = Bot(token=TOKEN)
+import PASss
+
+bot = Bot(token=PASss.TOKEN)
 dp = Dispatcher()
 
 

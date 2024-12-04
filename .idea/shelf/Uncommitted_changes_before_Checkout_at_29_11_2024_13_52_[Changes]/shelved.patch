@@ -1,0 +1,31 @@
+Index: main.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import logging\r\nimport asyncio\r\nfrom aiogram import Dispatcher, Bot, types\r\nfrom aiogram.filters import Command, Filter\r\nfrom aiogram.types import FSInputFile\r\n\r\nlogging.basicConfig(level=logging.INFO)\r\nTOKEN = '8122833408:AAFdg78LuB8AJFWUFaeU4pB8bMJB_uBM3Lo'\r\n\r\nbot = Bot(token=TOKEN)\r\ndp = Dispatcher()\r\n\r\n\r\n@dp.message(Command(\"start\"))\r\nasync def start(message: types.Message):\r\n    await message.reply('Hello world!' + message.from_user.username, parse_mode='pre-formatted fixed-width code block')\r\n\r\n\r\n@dp.message()\r\nasync def echo(message: types.Message):\r\n    a = FSInputFile(\"1.jpg\")\r\n    await message.answer_photo(a)\r\n\r\n\r\n\r\nasync def start_dp():\r\n    await dp.start_polling(bot)\r\n\r\n\r\nif __name__ == '__main__':\r\n    asyncio.run(start_dp())\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/main.py b/main.py
+--- a/main.py	(revision 6c74912807a96e6ec37063e3bba585f2aa95dfe8)
++++ b/main.py	(date 1732870269533)
+@@ -1,5 +1,7 @@
+ import logging
+ import asyncio
++from sched import scheduler
++
+ from aiogram import Dispatcher, Bot, types
+ from aiogram.filters import Command, Filter
+ from aiogram.types import FSInputFile
+@@ -21,6 +23,12 @@
+     a = FSInputFile("1.jpg")
+     await message.answer_photo(a)
+ 
++# Илья Маслов
++async def wake_up_members():
++    await bot.send_message(chat_id='-1002312275639', text="Время вставать!")
++
++
++scheduler.add_job(wake_up_members, 'cron', hour=13, minute=39)
+ 
+ 
+ async def start_dp():
