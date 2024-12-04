@@ -19,7 +19,7 @@ async def start(message: types.Message):
     driver = webdriver.Chrome()
     driver.get("https://journal.top-academy.ru/ru/main/schedule/page/index")
 
-    time.sleep(3)
+    time.sleep(6)
 
     username_input = driver.find_element(By.NAME, 'username')
     username_input.send_keys('Husnu_ii62')
@@ -30,7 +30,7 @@ async def start(message: types.Message):
     login_button = driver.find_element(By.XPATH, '//button[@type="submit"]')
     login_button.click()
 
-    time.sleep(2)
+    time.sleep(6)
 
     today = driver.find_element(By.XPATH, '//div[@class="day has-day is-today"]//div[@class="active-day"]')
     today.click()
@@ -38,11 +38,15 @@ async def start(message: types.Message):
     time.sleep(2)
 
     ID = -1002312275639
-    await bot.send_message(ID, 'Пары на сегодня:')
+    title = 'Пары на сегодня:\n'
     lessons = driver.find_elements(By.CLASS_NAME, 'less-name')
+    lessons_full = []
     for lesson in lessons:
         lesson_content = lesson.get_attribute('innerHTML')
-        await bot.send_message(ID, lesson_content)
+        lessons_full.append(lesson_content)
+    lessons_full = str(lessons_full).strip('[').strip(']').strip("'").replace("', '", "\n")
+    await bot.send_message(ID, title+lessons_full)
+
 
     driver.quit()
 
