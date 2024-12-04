@@ -19,7 +19,7 @@ async def start(message: types.Message):
     driver = webdriver.Chrome()
     driver.get("https://journal.top-academy.ru/ru/main/schedule/page/index")
 
-    time.sleep(2)
+    time.sleep(3)
 
     username_input = driver.find_element(By.NAME, 'username')
     username_input.send_keys('Husnu_ii62')
@@ -32,7 +32,7 @@ async def start(message: types.Message):
 
     time.sleep(2)
 
-    today = driver.find_element(By.XPATH, '//div[@class="active-day"]')
+    today = driver.find_element(By.XPATH, '//div[@class="day has-day is-today"]//div[@class="active-day"]')
     today.click()
 
     time.sleep(2)
