@@ -1,4 +1,5 @@
 import logging
+import password
 import asyncio
 import json
 import aiogram
@@ -13,11 +14,12 @@ def load_events_from_json():
 events = load_events_from_json()
 
 
+
 logging.basicConfig(level=logging.INFO)
 import password
 
 
-bot = aiogram.Bot(token=TOKEN)
+bot = aiogram.Bot(token=password.TOKEN)
 dp = Dispatcher()
 user_message_count = defaultdict(int)
 
