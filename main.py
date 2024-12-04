@@ -1,3 +1,10 @@
+import logging
+import asyncio
+import random
+from sched import scheduler
+
+from aiogram import Dispatcher, Bot, types
+from aiogram.filters import Filter
 from aiogram import F
 from aiogram.types import Message, FSInputFile, inline_query_results_button, ReplyKeyboardMarkup, Update
 from aiogram.filters import Command
