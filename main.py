@@ -1,80 +1,23 @@
-import asyncio
-import Password
+import aiogram
 import logging
-from datetime import datetime
-from aiogram import Bot, Dispatcher, types
-from aiogram.filters import Command
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import asyncio
+from aiogram import Dispatcher, Bot, types
+from aiogram.types import ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
 
-
-
-# Настройка логгера
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger
-
-CHAT_ID = '-1002312275639'
-
-
-bot = Bot(token=Password.TOKEN)
+TOKEN = '7252389655:AAEmtpYiwFYGALtHEZC9vpUhB0KJxV9euj0'
+bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# Дни рождения
-birthdays = {
-    'Никиту Владиславовича': '07.02',
-    'Регину Маратовну': '17.06',
-    'Виктрорию Александровну': '09.03',
-    'Владимира Владиславовича': '17.12',
-    'Марата': '02.11',
-    'Артура': '17.12',
-    'Егора': '25.06',
-    'Розу': '03.07',
-    'Владислава': '30.05',
-    'Данила': '24.08',
-    'Ралима': '06.09',
-    'Карпенко Артема': '03.04',
-    'Маслова Илью': '16.08',
-    'Ярослава': '22.01',
-    'Парфёнова Илью': '08.12',
-    'Кирилла': '13.02',
-    'Софью': '17.12',
-    'Фаезбека': '07.02',
-    'Арслана': '16.04',
-    'Ченцова Артема': '05.02',
-    'Наиля': '08.12',
-    'Хаяла': '18.09',
-}
+bot = Bot(token=TOKEN)
 
-
-# Команда /start
-@dp.message(Command('HappyBirthday'))
-async def start(message: types.Message):
-    await message.reply('Hello Friend!' + message.from_user.username)
-
-
-# Планировщик задач
-    scheduler = AsyncIOScheduler()
-    scheduler.add_job(check_and_send_birthday, 'cron', hour=10, minute=00)
-    scheduler.start()
-
-
-# Проверка и отправка поздравлений
-async def check_and_send_birthday():
-    today = datetime.now().strftime('%d.%m')
-    for name, date in birthdays.items():
-        if date == today:
-            message = f"🎉 Поздравляем {name} с Днем Рождения! 🥳🎂"
-            await bot.send_message(chat_id=CHAT_ID, text=message)
-            logger(f"Поздравление отправлено: {name}")
-
-
-# Запуск диспетчера
-async def start_dp():
-    await dp.start_polling(bot)
-
+list_student= {"Илья": "ФИО, Дата рождения, номер телефона, серия номер паспорта"}
+# ahhfafdasfsdfsdhaehgjghj
+@dp.message(F.text, Command('test'))
+async def start(message: types.Message, my_cakkback=None):
+    dox = InlineKeyboardButton
+    dox.row(types.InlineKeyboardButton(text="Найти", URL="")
+    await message.answer(parse_mode=ParseMode.MARDOWN_V2, replay_markup=builder.as_markup())
 
 if __name__ == '__main__':
     asyncio.run(start_dp())
-
-
-
-#суприм
