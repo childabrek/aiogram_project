@@ -17,7 +17,7 @@ import password
 bot = Bot(token=password.TOKEN)
 dp = Dispatcher()
 
-# Привет это Никита
+# Привет это Ралим
 
 # keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, keyboard=[])
 #
