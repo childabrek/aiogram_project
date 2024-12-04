@@ -1,4 +1,5 @@
 import asyncio
+import Password
 import logging
 from datetime import datetime
 from aiogram import Bot, Dispatcher, types
@@ -11,10 +12,10 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger
 
-BOT_TOKEN = "7525496568:AAG-zX2tzQVcZ89iyCXqeH9nuZlI0hJJJfE"
 CHAT_ID = '-1002312275639'
 
-bot = Bot(token=BOT_TOKEN)
+
+bot = Bot(token=Password.TOKEN)
 dp = Dispatcher()
 
 # Дни рождения
