@@ -1,28 +1,19 @@
 import json
 import logging
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from aiogram import Dispatcher, Bot, types
-from aiogram.filters import Command, Filter
-from aiogram.types import FSInputFile
+from aiogram.filters import Command
+from mytoken import TOKEN  # Импортируем токен из файла
 
 logging.basicConfig(level=logging.INFO)
-TOKEN = '7605960349:AAECPUTKkAm_8RR1wvWWMQKYYv8OS8AgQ2Y'
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-
 @dp.message(Command("start"))
 async def start(message: types.Message):
-    await message.reply('Hello world!' + message.from_user.username, parse_mode='pre-formatted fixed-width code block')
-
-
-@dp.message()
-async def echo(message: types.Message):
-    a = FSInputFile("1.jpg")
-    await message.answer_photo(a)
-
+    await message.reply('Hello world! ' + message.from_user.username)
 
 with open('words.json', 'r', encoding='utf-8') as f:
     bad_words_data = json.load(f)
@@ -56,11 +47,8 @@ async def auto_delete_message(msg: types.Message):
         if datetime.now() - last_deleted_time <= timedelta(minutes=30):
             await bot.delete_message(msg.chat.id, msg.message_id)
 
-
-
 async def start_dp():
     await dp.start_polling(bot)
-
 
 if __name__ == '__main__':
     asyncio.run(start_dp())
