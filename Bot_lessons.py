@@ -44,7 +44,7 @@ async def start(message: types.Message):
     for lesson in lessons:
         lesson_content = lesson.get_attribute('innerHTML')
         lessons_full.append(lesson_content)
-    lessons_full = str(lessons_full).strip('[').strip(']').strip("'").replace("', '", "\n")
+    lessons_full = str(lessons_full).strip('[').strip(']').strip("'").replace("', '", ",\n")
     await bot.send_message(ID, title+lessons_full)
 
 
