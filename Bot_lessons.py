@@ -7,9 +7,9 @@ from selenium.webdriver.common.by import By
 import time
 
 logging.basicConfig(level=logging.INFO)
-a = '7879535551:AAHIBTSqKL_F63fHMhhy9--xW5hNuNTmUb4'
 
-bot = Bot(token=a)
+import password
+bot = Bot(token=password.Token)
 dp = Dispatcher()
 # Привет это Арслан
 
