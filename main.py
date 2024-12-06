@@ -8,18 +8,17 @@ from mytoken import TOKEN  # Импортируем токен из файла
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=TOKEN)
-dp = Dispatcher()
+import password
 
-@dp.message(Command("start"))
-async def start(message: types.Message):
-    await message.reply('Hello world! ' + message.from_user.username)
+bot = Bot(token=password.TOKEN)
+dp = Dispatcher()
 
 with open('words.json', 'r', encoding='utf-8') as f:
     bad_words_data = json.load(f)
     bad_words = [item['word'] for item in bad_words_data]
 
 user_last_deleted_time = {}
+
 
 @dp.message(Command('delete'))
 async def delete_message(msg: types.Message):
@@ -29,7 +28,6 @@ async def delete_message(msg: types.Message):
 
         await bot.delete_message(chat_id, message_id_to_delete)
         await msg.answer("Сообщение удалено.")
-
         user_last_deleted_time[msg.from_user.id] = datetime.now()
     else:
         await msg.answer("Пожалуйста, ответьте на сообщение, которое хотите удалить.")
