@@ -13,8 +13,6 @@ def load_events_from_json():
 
 events = load_events_from_json()
 
-
-
 logging.basicConfig(level=logging.INFO)
 import password
 
