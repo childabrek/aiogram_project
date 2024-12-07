@@ -1,0 +1,4 @@
+aiogram
+requests
+datetime
+yandex_weather_api
