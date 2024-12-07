@@ -16,26 +16,42 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=password.TOKEN)
 dp = Dispatcher()
 
+
 # floydmacflurry
+floydbranch_enabled = True
 messages_history = []
 MAX_HISTORY_LENGTH = 100
+
 @dp.message()
 async def generate_combined_message(message: Message):
     global messages_history
-    messages_history.append(message.text)
-    if len(messages_history) > MAX_HISTORY_LENGTH:
-        messages_history.pop(0)
-    if len(messages_history) >= 5:
-        selected_messages = random.sample(messages_history, 5)
-        words = [word for msg in selected_messages for word in msg.split()]
-        combined_message = ' '.join(words[:10])
-        if random.randint(0, 1) == 1:
-            await bot.send_message(chat_id=message.chat.id, text=combined_message)
+    if floydbranch_enabled:
+        messages_history.append(message.text)
+        if len(messages_history) > MAX_HISTORY_LENGTH:
+            messages_history.pop(0)
+        if len(messages_history) >= 5:
+            selected_messages = random.sample(messages_history, 5)
+            words = [word for msg in selected_messages for word in msg.split()]
+            combined_message = ' '.join(words[:10])
+            if random.randint(0, 1) == 1:
+                await bot.send_message(chat_id=message.chat.id, text=combined_message)
+
+@dp.message(Command("floydbranch_on"))
+async def enable_function(message: Message):
+    global floydbranch_enabled
+    floydbranch_enabled = True
+    await message.reply("Функция включена.")
+
+@dp.message(Command("floydbranch_off"))
+async def disable_function(message: Message):
+    global floydbranch_enabled
+    floydbranch_enabled = False
+    await message.reply("Функция отключена.")
 
 
 class MyFilter(Filter):
     def __init__(self, my_text: str) -> None:
-        self.my_text = my_text
+        self.my_text = my_text0
 
     async def __call__(self, message: Message) -> bool:
         return message.text == self.my_text
