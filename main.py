@@ -36,7 +36,6 @@ async def get_weather(message: types.Message):
         weather_data = response.json()
         if 'data' in weather_data:
             temperature = weather_data['data']['weatherByPoint']['now']['temperature']
-            condition = weather_data['data']['weatherByPoint']['now']['condition']
             await message.answer(f"Температура в Стерлитамаке: {temperature}°C")
         else:
             await message.answer("Ошибка: данные не получены.")
