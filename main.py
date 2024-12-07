@@ -6,7 +6,7 @@ import aiogram
 from aiogram import Dispatcher, Bot, types
 from aiogram.filters import Command
 from collections import defaultdict
-
+# готово
 def load_events_from_json():
     with open('events.json', 'r', encoding='utf-8') as file:
         return json.load(file)
