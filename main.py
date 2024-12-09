@@ -10,26 +10,32 @@ import requests
 from aiogram import Dispatcher, Bot, types
 from aiogram.filters import Command
 from collections import defaultdict
-
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from pytz import utc
 # Тут все токены логины и пароли
 import password
 
+# инит бота
+logging.basicConfig(level=logging.INFO)
+bot = aiogram.Bot(token=password.TOKEN)
+dp = Dispatcher()
 
+# не очень хорошая глобальная переменная Влада. Нет комментариев как работает, что делает.
+# А также в теории от неё можно избавится, но будет висеть как плохой пример
+user_message_count = defaultdict(int)
+
+# Шедулер Ильи Маслова
+scheduler = AsyncIOScheduler()
+scheduler.configure(timezone=utc)
+
+
+# код Владислава
 def load_events_from_json():
     try:
         with open('events.json', 'r', encoding='utf-8') as file:
             return json.load(file)
     except:
         return None
-
-
-events = load_events_from_json()
-
-logging.basicConfig(level=logging.INFO)
-
-bot = aiogram.Bot(token=password.TOKEN)
-dp = Dispatcher()
-user_message_count = defaultdict(int)
 
 
 @dp.message(Command("count_vlad"))
@@ -47,6 +53,7 @@ async def count(message: types.Message):
 
 @dp.message()
 async def handle_message(message: types.Message):
+    events = load_events_from_json()
     year = message.text.strip()
     user_id = message.from_user.id
     user_message_count[user_id] += 1
@@ -59,12 +66,30 @@ async def handle_message(message: types.Message):
         await message.reply('Это не смешно, такие "приколы" могут привести к уголовной ответственности.')
 
 
-URL = 'https://api.weather.yandex.ru/graphql/query'
+@dp.message()
+async def count_messages(message: types.Message):
+    # код Ярослава
+    if any(bad_word in message.text.lower() for bad_word in bad_words):
+        await bot.delete_message(message.chat.id, message.message_id)
+        logging.info(f"Удалено сообщение: {message.text}")
+
+        user_last_deleted_time[message.from_user.id] = datetime.now()
+
+    if message.from_user.id in user_last_deleted_time:
+        last_deleted_time = user_last_deleted_time[message.from_user.id]
+        if datetime.now() - last_deleted_time <= timedelta(minutes=30):
+            await bot.delete_message(message.chat.id, message.message_id)
+
+    # код Влада
+
+    user_id = message.from_user.id
+    user_message_count[user_id] += 1
+    await asyncio.sleep(0.1)
 
 
+# Функция Ралима
 @dp.message(Command("pogoda"))
 async def get_weather(message: types.Message):
-    print(123213123)
     query = """{
         weatherByPoint(request: { lat: 53.6246, lon: 55.9501 }) {
             now {
@@ -74,7 +99,7 @@ async def get_weather(message: types.Message):
         }
     }"""
     headers = {"X-Yandex-Weather-Key": password.ACCESS_KEY}
-    response = requests.post(URL, headers=headers, json={'query': query})
+    response = requests.post('https://api.weather.yandex.ru/graphql/query', headers=headers, json={'query': query})
 
     if response.status_code == 200:
         weather_data = response.json()
@@ -87,6 +112,9 @@ async def get_weather(message: types.Message):
         await message.answer("Ошибка API: проверьте свой запрос.")
 
 
+# Код Ярослава
+# Тоже плохие переменные, но от словаря избавится трудно без потери производительности,
+# а вот про нижнюю подумать можно
 with open('words.json', 'r', encoding='utf-8') as f:
     bad_words_data = json.load(f)
     bad_words = [item['word'] for item in bad_words_data]
@@ -107,25 +135,44 @@ async def delete_message(msg: types.Message):
         await msg.answer("Пожалуйста, ответьте на сообщение, которое хотите удалить.")
 
 
-@dp.message()
-async def auto_delete_message(msg: types.Message):
-    if any(bad_word in msg.text.lower() for bad_word in bad_words):
-        await bot.delete_message(msg.chat.id, msg.message_id)
-        logging.info(f"Удалено сообщение: {msg.text}")
-
-        user_last_deleted_time[msg.from_user.id] = datetime.now()
-
-    if msg.from_user.id in user_last_deleted_time:
-        last_deleted_time = user_last_deleted_time[msg.from_user.id]
-        if datetime.now() - last_deleted_time <= timedelta(minutes=30):
-            await bot.delete_message(msg.chat.id, msg.message_id)
+# илья маслов
+async def wake_up_members():
+    await bot.send_message(chat_id='-1002312275639', text="Время вставать!")
 
 
-@dp.message()
-async def count_messages(message: types.Message):
-    user_id = message.from_user.id
-    user_message_count[user_id] += 1
-    await asyncio.sleep(0.1)
+scheduled_hour = 7
+scheduled_minute = 5
+scheduler.add_job(wake_up_members, 'cron', hour=scheduled_hour, minute=scheduled_minute, id='wake_up_job')
+
+
+@dp.message(Command('set_time'))
+async def set_time(message: types.Message):
+    global scheduled_hour, scheduled_minute
+
+    time_data = message.text.split(' ')[1:]
+    if len(time_data) != 2:
+        await message.reply("Укажите время в формате: /set_time ЧЧ ММ")
+        return
+
+    try:
+        hour, minute = int(time_data[0]), int(time_data[1])
+        if 0 <= hour < 24 and 0 <= minute < 60:
+            scheduled_hour = hour
+            scheduled_minute = minute
+
+            scheduler.remove_job('wake_up_job')
+            scheduler.add_job(wake_up_members, 'cron', hour=scheduled_hour, minute=scheduled_minute, id='wake_up_job')
+
+            await message.reply(f"Время было обновлено на: {scheduled_hour}:{scheduled_minute:02d}")
+        else:
+            await message.reply("Некорректное время. Часы должны быть от 0 до 23, минуты от 0 до 59.")
+    except ValueError:
+        await message.reply("Пожалуйста, используйте целые числа для часового и минутного значений.")
+
+
+@dp.message(Command('chatid'))
+async def chat_id(message: types.Message):
+    await message.reply(f'ID чата: {message.chat.id}')
 
 
 async def main():
