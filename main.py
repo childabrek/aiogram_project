@@ -45,18 +45,18 @@ async def count(message: types.Message):
     await message.reply(f"{username}, ты отправил(а) {count} сообщений.")
 
 
-# @dp.message()
-# async def handle_message(message: types.Message):
-#     year = message.text.strip()
-#     user_id = message.from_user.id
-#     user_message_count[user_id] += 1
-#     if year in events:
-#         funny_event = events[year]['funny']
-#         scary_event = events[year]['scary']
-#         response = f"Смешное событие {year} года: {funny_event}\n \nСтрашное событие {year} года: {scary_event}"
-#         await message.reply(response)
-#     elif year == "1488":
-#         await message.reply('Это не смешно, такие "приколы" могут привести к уголовной ответственности.')
+@dp.message()
+async def handle_message(message: types.Message):
+    year = message.text.strip()
+    user_id = message.from_user.id
+    user_message_count[user_id] += 1
+    if year in events:
+        funny_event = events[year]['funny']
+        scary_event = events[year]['scary']
+        response = f"Смешное событие {year} года: {funny_event}\n \nСтрашное событие {year} года: {scary_event}"
+        await message.reply(response)
+    elif year == "1488":
+        await message.reply('Это не смешно, такие "приколы" могут привести к уголовной ответственности.')
 
 
 URL = 'https://api.weather.yandex.ru/graphql/query'
