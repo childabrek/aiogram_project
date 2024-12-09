@@ -1,62 +1,137 @@
+import json
 import logging
-import asyncio
-from sched import scheduler
+from datetime import datetime, timedelta
 
+import password
+import asyncio
+import json
+import aiogram
+import requests
 from aiogram import Dispatcher, Bot, types
-from aiogram.filters import Filter
-from aiogram import F
-from aiogram.types import Message, FSInputFile, inline_query_results_button, ReplyKeyboardMarkup
 from aiogram.filters import Command
-from aiogram.enums import ParseMode
-import yandex_weather_api
+from collections import defaultdict
+
+# Тут все токены логины и пароли
+import password
+
+
+def load_events_from_json():
+    try:
+        with open('events.json', 'r', encoding='utf-8') as file:
+            return json.load(file)
+    except:
+        return None
+
+
+events = load_events_from_json()
 
 logging.basicConfig(level=logging.INFO)
 
-import password
-
-bot = Bot(token=password.TOKEN)
+bot = aiogram.Bot(token=password.TOKEN)
 dp = Dispatcher()
-
-# Привет это Никита
-
-# keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, keyboard=[])
-#
-# keyboard.
-
-class MyFilter(Filter):
-    def __init__(self, my_text: str) -> None:
-        self.my_text = my_text
-
-    async def __call__(self, message: Message) -> bool:
-        return message.text == self.my_text
+user_message_count = defaultdict(int)
 
 
-@dp.message(Command("start"))
-async def start(message: types.Message):
-    button = inline_query_results_button.InlineQueryResultsButton(text='test')
-    await message.reply('Hello world!' + message.from_user.username, parse_mode='pre-formatted fixed-width code block')
+@dp.message(Command("count_vlad"))
+async def count(message: types.Message):
+    user_id = message.from_user.id
+    user_message_count[user_id] += 1
+    username = message.from_user.full_name
+    count = user_message_count[user_id]
+    if username == "society":
+        username = "Повелитель " + username
+    else:
+        username = "Ниндзя " + username
+    await message.reply(f"{username}, ты отправил(а) {count} сообщений.")
 
 
-@dp.message(F.text, Command("test"))
-async def any_message(message: Message):
-    a = FSInputFile('123.txt')
-    await message.answer_document(a)
-
-# Илья Маслов
-async def wake_up_members():
-    await bot.send_message(chat_id='-1002312275639', text="Время вставать!")
-
-
-# @dp.message(MyFilter("Хакнуть Илью"))
-# async def hack(message: Message):
-#     await message.answer(message.text.split()[1])
-#
-# scheduler.add_job(wake_up_members, 'cron', hour=13, minute=39)
+# @dp.message()
+# async def handle_message(message: types.Message):
+#     year = message.text.strip()
+#     user_id = message.from_user.id
+#     user_message_count[user_id] += 1
+#     if year in events:
+#         funny_event = events[year]['funny']
+#         scary_event = events[year]['scary']
+#         response = f"Смешное событие {year} года: {funny_event}\n \nСтрашное событие {year} года: {scary_event}"
+#         await message.reply(response)
+#     elif year == "1488":
+#         await message.reply('Это не смешно, такие "приколы" могут привести к уголовной ответственности.')
 
 
-async def start_dp():
+URL = 'https://api.weather.yandex.ru/graphql/query'
+
+
+@dp.message(Command("pogoda"))
+async def get_weather(message: types.Message):
+    print(123213123)
+    query = """{
+        weatherByPoint(request: { lat: 53.6246, lon: 55.9501 }) {
+            now {
+                temperature
+                condition
+            }
+        }
+    }"""
+    headers = {"X-Yandex-Weather-Key": password.ACCESS_KEY}
+    response = requests.post(URL, headers=headers, json={'query': query})
+
+    if response.status_code == 200:
+        weather_data = response.json()
+        if 'data' in weather_data:
+            temperature = weather_data['data']['weatherByPoint']['now']['temperature']
+            await message.answer(f"Температура в Стерлитамаке: {temperature}°C")
+        else:
+            await message.answer("Ошибка: данные не получены.")
+    else:
+        await message.answer("Ошибка API: проверьте свой запрос.")
+
+
+with open('words.json', 'r', encoding='utf-8') as f:
+    bad_words_data = json.load(f)
+    bad_words = [item['word'] for item in bad_words_data]
+
+user_last_deleted_time = {}
+
+
+@dp.message(Command('delete'))
+async def delete_message(msg: types.Message):
+    if msg.reply_to_message:
+        message_id_to_delete = msg.reply_to_message.message_id
+        chat_id = msg.chat.id
+
+        await bot.delete_message(chat_id, message_id_to_delete)
+        await msg.answer("Сообщение удалено.")
+        user_last_deleted_time[msg.from_user.id] = datetime.now()
+    else:
+        await msg.answer("Пожалуйста, ответьте на сообщение, которое хотите удалить.")
+
+
+@dp.message()
+async def auto_delete_message(msg: types.Message):
+    if any(bad_word in msg.text.lower() for bad_word in bad_words):
+        await bot.delete_message(msg.chat.id, msg.message_id)
+        logging.info(f"Удалено сообщение: {msg.text}")
+
+        user_last_deleted_time[msg.from_user.id] = datetime.now()
+
+    if msg.from_user.id in user_last_deleted_time:
+        last_deleted_time = user_last_deleted_time[msg.from_user.id]
+        if datetime.now() - last_deleted_time <= timedelta(minutes=30):
+            await bot.delete_message(msg.chat.id, msg.message_id)
+
+
+@dp.message()
+async def count_messages(message: types.Message):
+    user_id = message.from_user.id
+    user_message_count[user_id] += 1
+    await asyncio.sleep(0.1)
+
+
+async def main():
+    await bot.delete_webhook()
     await dp.start_polling(bot)
 
 
 if __name__ == '__main__':
-    asyncio.run(start_dp())
+    asyncio.run(main())
