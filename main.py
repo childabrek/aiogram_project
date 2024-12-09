@@ -17,8 +17,8 @@ async def get_lessons():
     payload = json.dumps({
         "application_key": "6a56a5df2667e65aab73ce76d1dd737f7d1faef9c52e8b8c55ac75f565d8e8a6",
         "id_city": None,
-        "password": "OrdA2020",
-        "username": "Husnu_ii62"
+        "password": password.porol,
+        "username": password.login
     })
     users_headers = {
         'accept': 'application/json, text/plain, */*',
