@@ -1,5 +1,6 @@
 import json
 import logging
+import random
 from datetime import datetime, timedelta
 
 import password
@@ -49,42 +50,6 @@ async def count(message: types.Message):
     else:
         username = "Ниндзя " + username
     await message.reply(f"{username}, ты отправил(а) {count} сообщений.")
-
-
-@dp.message()
-async def handle_message(message: types.Message):
-    events = load_events_from_json()
-    year = message.text.strip()
-    user_id = message.from_user.id
-    user_message_count[user_id] += 1
-    if year in events:
-        funny_event = events[year]['funny']
-        scary_event = events[year]['scary']
-        response = f"Смешное событие {year} года: {funny_event}\n \nСтрашное событие {year} года: {scary_event}"
-        await message.reply(response)
-    elif year == "1488":
-        await message.reply('Это не смешно, такие "приколы" могут привести к уголовной ответственности.')
-
-
-@dp.message()
-async def count_messages(message: types.Message):
-    # код Ярослава
-    if any(bad_word in message.text.lower() for bad_word in bad_words):
-        await bot.delete_message(message.chat.id, message.message_id)
-        logging.info(f"Удалено сообщение: {message.text}")
-
-        user_last_deleted_time[message.from_user.id] = datetime.now()
-
-    if message.from_user.id in user_last_deleted_time:
-        last_deleted_time = user_last_deleted_time[message.from_user.id]
-        if datetime.now() - last_deleted_time <= timedelta(minutes=30):
-            await bot.delete_message(message.chat.id, message.message_id)
-
-    # код Влада
-
-    user_id = message.from_user.id
-    user_message_count[user_id] += 1
-    await asyncio.sleep(0.1)
 
 
 # Функция Ралима
@@ -173,6 +138,75 @@ async def set_time(message: types.Message):
 @dp.message(Command('chatid'))
 async def chat_id(message: types.Message):
     await message.reply(f'ID чата: {message.chat.id}')
+
+
+# Код Артёма Ч
+# floydmacflurry
+floydbranch_enabled = True
+messages_history = []
+MAX_HISTORY_LENGTH = 100
+
+
+@dp.message()
+async def generate_combined_message(message: types.Message):
+    global messages_history
+    if floydbranch_enabled:
+        messages_history.append(message.text)
+        if len(messages_history) > MAX_HISTORY_LENGTH:
+            messages_history.pop(0)
+        if len(messages_history) >= 5:
+            selected_messages = random.sample(messages_history, 5)
+            words = [word for msg in selected_messages for word in msg.split()]
+            combined_message = ' '.join(words[:10])
+            if random.randint(0, 1) == 1:
+                await bot.send_message(chat_id=message.chat.id, text=combined_message)
+
+
+@dp.message(Command("floydbranch_on"))
+async def enable_function(message: types.Message):
+    global floydbranch_enabled
+    floydbranch_enabled = True
+    await message.reply("Функция включена.")
+
+
+@dp.message(Command("floydbranch_off"))
+async def disable_function(message: types.Message):
+    global floydbranch_enabled
+    floydbranch_enabled = False
+    await message.reply("Функция отключена.")
+
+
+@dp.message()
+async def count_messages(message: types.Message):
+    # код Ярослава
+    if any(bad_word in message.text.lower() for bad_word in bad_words):
+        await bot.delete_message(message.chat.id, message.message_id)
+        logging.info(f"Удалено сообщение: {message.text}")
+
+        user_last_deleted_time[message.from_user.id] = datetime.now()
+
+    if message.from_user.id in user_last_deleted_time:
+        last_deleted_time = user_last_deleted_time[message.from_user.id]
+        if datetime.now() - last_deleted_time <= timedelta(minutes=30):
+            await bot.delete_message(message.chat.id, message.message_id)
+
+    # код Влада
+
+    events = load_events_from_json()
+    year = message.text.strip()
+    user_id = message.from_user.id
+    user_message_count[user_id] += 1
+    if year in events:
+        funny_event = events[year]['funny']
+        scary_event = events[year]['scary']
+        response = f"Смешное событие {year} года: {funny_event}\n \nСтрашное событие {year} года: {scary_event}"
+        await message.reply(response)
+    elif year == "1488":
+        await message.reply('Это не смешно, такие "приколы" могут привести к уголовной ответственности.')
+
+    user_id = message.from_user.id
+    user_message_count[user_id] += 1
+    await asyncio.sleep(0.1)
 
 
 async def main():
