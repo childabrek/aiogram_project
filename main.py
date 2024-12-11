@@ -226,7 +226,7 @@ async def get_lessons():
 
 @dp.message(Command('lessons'))
 async def send_lessons(message: types.Message):
-    ID = -1002312275639
+    ID = -1002249502986
     lessons = await get_lessons()
     title = 'Пары на сегодня:\n'
     await bot.send_message(ID, title + lessons)
