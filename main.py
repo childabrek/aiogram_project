@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 TOKEN = '7539834728:AAGeuBtBetJd9aal7wwdTsoNokWTWukhnHU'
-ACCESS_KEY = "f8a2ea6f-4d3e-472b-9de6-eb6de976e723"
+ACCESS_KEY = "в личке в телеграме"
 URL = 'https://api.weather.yandex.ru/graphql/query'
 
 logging.basicConfig(level=logging.INFO)
