@@ -15,23 +15,23 @@ bot = Bot(token=TOKEN)
 list_student= {"Илья": "ФИО, Дата рождения, номер телефона, ЮЗ, "}
 
 @dp.message(Command('help'))
-async def start(message: types.Message, my_cakkback=None):
+async def HELP(message: types.Message, my_cakkback=None):
     await message.answer("/PRIVATE(отправляет сообщение в ЛС)"
                          " /DOX(выводит данные пользователя по типу данным)"
                          " /NETWORKS(отправляет возможные ссылки на соц сети)")
 
 @dp.message(Command('DOX'))
-async def start(message: types.Message, my_cakkback=None):
+async def DOX(message: types.Message, my_cakkback=None):
     await message.answer("выберите данные пользователя(ФИО, ДР...)")
-    if
 
 @dp.message(Command('PRIVATE'))
-async def start(message: types.Message, my_cakkback=None):
-
+async def PRIVATE(message: types.Message, my_cakkback=None):
+    pass
 
 @dp.message(Command('NETWORKS'))
-async def start(message: types.Message, my_cakkback=None):
+async def NETWORKS(message: types.Message, my_cakkback=None):
     await message.answer("введите данные пользователя")
+
 
 async def start_dp():
     await dp.start_polling(bot)
