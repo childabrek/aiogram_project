@@ -25,7 +25,7 @@ duty = ["Хаял", "Влад", "Данила", "Кирилл", "Арслан", 
 
 current_date = date.today()
 counter = 0
-
+scheduler = ("Asia/Yekaterinburg")
 
 @dp.message(Command("startSophie")) #начальная команда
 async def check_and_send_duty(message: types.Message): #наша функция
