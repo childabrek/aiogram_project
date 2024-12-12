@@ -4,6 +4,7 @@ import os
 
 import aiogram.exceptions
 
+from random import choice
 from aiogram import Dispatcher, Bot, F
 from aiogram.filters import Command
 from aiogram.types import FSInputFile, Message, KeyboardButton, ReplyKeyboardMarkup
@@ -268,38 +269,44 @@ try:
         if mess == '':
             await message.answer('Введите название песни')
             f = False
+        mess = mess.replace(' ', '')
+        mess2 = mess.replace('.mp3', '')
+        if mess2.lower() == 'random':
+            song = choice(Songs)
+            file = FSInputFile(f'Songs/soad/{song}')
+            await message.reply_document(file)
         else:
             mess = mess + '.mp3'
-        mess1 = mess.replace(' ', '')
-        for name in os.listdir('Songs/soad'):
-            name1 = name.replace(' ', '')
-            if mess1.lower() == name1.lower():
-                file = FSInputFile(f'Songs/soad/{name}')
-                await message.answer_document(file)
-                break
-        else:
-            if f is True:
-                for i in os.listdir('Songs/soad'):
-                    count_of_coincidence = 0
-                    b = -1
-                    try:
-                        while True:
-                            b += 1
-                            w = mess1[b]
-                            i1 = i[b]
-                            if i1.lower() == w.lower():
-                                count_of_coincidence += 1
-                    except IndexError:
-                        list_cons.append(count_of_coincidence)
-                index1 = list_cons.index(max(list_cons))
-                list_cons[index1] = 0
-                index2 = list_cons.index(max(list_cons))
-                list_cons[index2] = 0
-                index3 = list_cons.index(max(list_cons))
-                u = str(Songs[index1].replace('.mp3', ''))
-                u1 = str(Songs[index2].replace('.mp3', ''))
-                u2 = str(Songs[index3].replace('.mp3', ''))
-                await message.answer(f'Возможно вы имели ввиду: {u}, {u1}, {u2}')
+            mess1 = mess.replace(' ', '')
+            for name in os.listdir('Songs/soad'):
+                name1 = name.replace(' ', '')
+                if mess1.lower() == name1.lower():
+                    file = FSInputFile(f'Songs/soad/{name}')
+                    await message.answer_document(file)
+                    break
+            else:
+                if f is True:
+                    for i in os.listdir('Songs/soad'):
+                        count_of_coincidence = 0
+                        b = -1
+                        try:
+                            while True:
+                                b += 1
+                                w = mess1[b]
+                                i1 = i[b]
+                                if i1.lower() == w.lower():
+                                    count_of_coincidence += 1
+                        except IndexError:
+                            list_cons.append(count_of_coincidence)
+                    index1 = list_cons.index(max(list_cons))
+                    list_cons[index1] = 0
+                    index2 = list_cons.index(max(list_cons))
+                    list_cons[index2] = 0
+                    index3 = list_cons.index(max(list_cons))
+                    u = str(Songs[index1].replace('.mp3', ''))
+                    u1 = str(Songs[index2].replace('.mp3', ''))
+                    u2 = str(Songs[index3].replace('.mp3', ''))
+                    await message.answer(f'Возможно вы имели ввиду: {u1}, {u2}, {u}')
 except TypeError:
     pass
 
