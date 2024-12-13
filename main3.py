@@ -1,6 +1,4 @@
 import random
-from multiprocessing.managers import State
-from aiogram.fsm.state import StatesGroup
 import angar
 from aiogram.types import FSInputFile, Message
 import logging
@@ -22,14 +20,15 @@ async def samoletik(message: types.Message):
     await message.answer(angar.park[a])
 
 @dp.message(Command('add_samoletik'))
-async def add(message: Message, bot: Bot):
-    print(":")
+async def add(message: types.Message):
+    print('bob')
     await message.reply('Отправьте фото самолетика')
-    await bot.download(
-        message.photo[-1],
-        destination=f"bank/{len(gallery)}.jpg"
-    )
-    await message.reply('Фото сохранено!\nТеперь отправьте текст')
+
+@dp.message(F.photo)
+async def add_photo(message: Message, bot: Bot):
+    print(":")
+    await bot.download(message.photo[-1], destination=f"bank/{len(gallery)}.jpg")
+    await message.reply('Фото сохранено!')
 
 
 
