@@ -1,80 +1,37 @@
-import json
 import logging
-import asyncio
 import requests
-
-from datetime import datetime, timedelta
-from aiogram import Dispatcher, Bot, types
+import asyncio
+import Password
 from aiogram.filters import Command
-from mytoken import TOKEN  # Импортируем токен из файла
+from aiogram import Bot, Dispatcher, types
+
+
+WEATHER_URL = 'http://api.openweathermap.org/data/2.5/weather'
 
 logging.basicConfig(level=logging.INFO)
 
-
-TOKEN = '7539834728:AAGeuBtBetJd9aal7wwdTsoNokWTWukhnHU'
-ACCESS_KEY = "e9ef5100-c91a-4ad1-bceb-8623d78634a9"
-URL = 'https://api.weather.yandex.ru/graphql/query'
-
-logging.basicConfig(level=logging.INFO)
-bot = Bot(token=TOKEN)
+bot = Bot(token=Password.API_TOKEN)
 dp = Dispatcher()
 
-@dp.message(Command("pogoda"))
-async def get_weather(message: types.Message):
-    query = """{
-        weatherByPoint(request: { lat: 53.6246, lon: 55.9501 }) {
-            now {
-                temperature
-                condition
-            }
-        }
-    }"""
-    headers = {"X-Yandex-Weather-Key": ACCESS_KEY}
-    response = requests.post(URL, headers=headers, json={'query': query})
+
+@dp.message(Command('pogoda'))
+async def send_weather(message: types.Message):
+    city = "Sterlitamak"  # можно изменить ихменть город ( только на англ!)
+    params = {
+        'q': city,
+        'appid': Password.WEATHER_API_KEY,
+        'units': 'metric',
+    }
+    response = requests.get(WEATHER_URL, params=params)
 
     if response.status_code == 200:
-        weather_data = response.json()
-        if 'data' in weather_data:
-            temperature = weather_data['data']['weatherByPoint']['now']['temperature']
-            await message.answer(f"Температура в Стерлитамаке: {temperature}°C")
-        else:
-            await message.answer("Ошибка: данные не получены.")
+        data = response.json()
+        temperature = data['main']['temp']
+        message_text = f"Погода в {city}:\nТемпература: {temperature}°C"
+        await message.answer(message_text)
     else:
-        await message.answer("Ошибка API: проверьте свой запрос.")
+        await message.answer('Ошибка API: проверьте свой запрос.')
 
-
-
-with open('words.json', 'r', encoding='utf-8') as f:
-    bad_words_data = json.load(f)
-    bad_words = [item['word'] for item in bad_words_data]
-
-user_last_deleted_time = {}
-
-
-@dp.message(Command('delete'))
-async def delete_message(msg: types.Message):
-    if msg.reply_to_message:
-        message_id_to_delete = msg.reply_to_message.message_id
-        chat_id = msg.chat.id
-
-        await bot.delete_message(chat_id, message_id_to_delete)
-        await msg.answer("Сообщение удалено.")
-        user_last_deleted_time[msg.from_user.id] = datetime.now()
-    else:
-        await msg.answer("Пожалуйста, ответьте на сообщение, которое хотите удалить.")
-
-@dp.message()
-async def auto_delete_message(msg: types.Message):
-    if any(bad_word in msg.text.lower() for bad_word in bad_words):
-        await bot.delete_message(msg.chat.id, msg.message_id)
-        logging.info(f"Удалено сообщение: {msg.text}")
-
-        user_last_deleted_time[msg.from_user.id] = datetime.now()
-
-    if msg.from_user.id in user_last_deleted_time:
-        last_deleted_time = user_last_deleted_time[msg.from_user.id]
-        if datetime.now() - last_deleted_time <= timedelta(minutes=30):
-            await bot.delete_message(msg.chat.id, msg.message_id)
 
 async def start_dp():
     await dp.start_polling(bot)
