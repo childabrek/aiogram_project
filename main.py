@@ -1,85 +1,168 @@
 import os
+import json
 import random
-from multiprocessing.managers import State
-from aiogram.fsm.state import StatesGroup
-import angar
-from aiogram.types import FSInputFile
 import logging
-from aiogram import Dispatcher, Bot, types
 import asyncio
+from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
-import password
-from angar import gallery
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import FSInputFile
+from password import TOKEN
 
 logging.basicConfig(level=logging.INFO)
-bot = Bot(password.TOKEN)
-dp = Dispatcher()
+
+bot = Bot(TOKEN)
+storage = MemoryStorage()
+dp = Dispatcher(storage=storage)
 
 class Form(StatesGroup):
-    waiting_for_photo = State()
+    waiting_for_name = State()
     waiting_for_text = State()
+    waiting_for_photo = State()
+    waiting_for_delete_name = State()
+
+@dp.message(Command("help_samoletik"))
+async def help_samoletik(message: types.Message):
+    await message.answer("/samoletik - Отправить рандомный самолетик\n"
+                         "/help_samoletik - Отправить список всех команд\n"
+                         "/list_samoletik - Вывести лист всех самолетиков\n"
+                         "/delete_samoletik - Удалить самолетик по названию\n"
+                         "/add_samoletik - Добавить самолетик")
 
 @dp.message(Command('samoletik'))
-async def samoletik(message: types.Message):
-    a = random.randint(0, len(angar.park))
-    await message.answer_photo(FSInputFile('bank\\' + (angar.gallery[a])))
-    await message.answer(angar.park[a])
+async def get_random_samoletik(message: types.Message):
+    try:
+        with open('angarinfo.json', 'r', encoding='utf-8') as f:
+            json_data = json.load(f)
+            if not json_data:
+                await message.reply('Нет сохраненных самолетиков.')
+                return
+            random_data = random.choice(json_data)
+            await message.answer_photo(FSInputFile(random_data['photo_path']))
+            await message.answer(random_data['text'])
+    except FileNotFoundError:
+        await message.reply('Нет сохраненных самолетиков.')
+    except Exception as e:
+        await message.reply('Ошибка при получении случайного самолетика.')
+        await message.answer(str(e))
+
+@dp.message(Command('list_samoletik'))
+async def listsamoletik(message: types.Message):
+    try:
+        with open('angarinfo.json', 'r', encoding='utf-8') as f:
+            json_data = json.load(f)
+            if not json_data:
+                await message.reply('Нет сохраненных самолетиков.')
+                return
+            names = [item['name'] for item in json_data]
+            names_list = "\n".join(names)
+            await message.answer(f'Сохраненные самолетики:\n{names_list}')
+    except FileNotFoundError:
+        await message.answer('Нет сохраненных самолетиков.')
+    except Exception as e:
+        await message.reply('Ошибка при получении списка самолетиков.')
+        await message.answer(str(e))
+
+@dp.message(Command('delete_samoletik'))
+async def delete_samoletik(message: types.Message):
+    name_to_delete = message.text.replace('/delete_samoletik', '').strip()
+
+    if not name_to_delete:
+        await message.answer('Пожалуйста, укажите название самолетика после команды.')
+        return
+
+    try:
+        if not os.path.exists('angarinfo.json'):
+            await message.reply('Нет сохраненных самолетиков.')
+            return
+
+        with open('angarinfo.json', 'r+', encoding='utf-8') as f:
+            json_data = json.load(f)
+
+            if not json_data:
+                await message.reply('Нет сохраненных самолетиков.')
+                return
+
+            item_to_delete = next((item for item in json_data if item['name'] == name_to_delete), None)
+
+            if item_to_delete:
+                photo_path = item_to_delete['photo_path']
+                if os.path.exists(photo_path):
+                    os.remove(photo_path)
+
+                json_data.remove(item_to_delete)
+                f.seek(0)
+                json.dump(json_data, f, ensure_ascii=False, indent=4)
+                f.truncate()
+
+                await message.reply(f'Самолетик "{name_to_delete}" успешно удален.')
+            else:
+                await message.reply(f'Самолетик с названием "{name_to_delete}" не найден.')
+    except Exception as e:
+        await message.reply('Ошибка при удалении самолетика.')
+        await message.answer(str(e))
 
 
 @dp.message(Command('add_samoletik'))
-async def cmd_add_samoletik(message: types.Message):
-    # Переводим пользователя в состояние ожидания текста
-    await Form.waiting_for_text.set()
-    await message.reply("Введите описание для самолётика:")
+async def add(message: types.Message, state: FSMContext):
+    await message.answer('Введите название самолетика')
+    await state.set_state(Form.waiting_for_name)
 
+@dp.message(lambda message: message.content_type == types.ContentType.TEXT)
+async def text(message: types.Message, state: FSMContext):
+    current_state = await state.get_state()
+    if current_state == Form.waiting_for_name:
+        name = message.text
+        await state.update_data(name=name)
+        await message.answer('Введите текст о самолетике')
+        await state.set_state(Form.waiting_for_text)
+    elif current_state == Form.waiting_for_text:
+        text = message.text
+        await state.update_data(text=text)
+        await message.answer('Отправьте фото самолетика')
+        await state.set_state(Form.waiting_for_photo)
 
-@dp.message(state=Form.waiting_for_text)
-async def process_text(message: types.Message, state):
-    await state.update_data(text=message.text)
-    await Form.waiting_for_photo.set()
-    await message.reply("Пожалуйста, отправьте изображение самолётика:")
+@dp.message(lambda message: message.content_type == types.ContentType.PHOTO)
+async def waiting_for_photo(message: types.Message, state: FSMContext):
+    if await state.get_state() == Form.waiting_for_photo:
+        try:
+            file_id = message.photo[-1].file_id
+            file = await bot.get_file(file_id)
+            data = await state.get_data()
+            file_path = f"angar/{data['name']}.jpg"
 
-    # Переводим пользователя в состояние ожидания изображения
-    await Form.waiting_for_photo.set()
-    await message.reply("Пожалуйста, отправьте изображение самолётика:")
+            if not os.path.exists("angar"):
+                os.makedirs("angar")
 
+            await bot.download_file(file.file_path, file_path)
+            data['photo_path'] = file_path
 
-@dp.message(state=Form.waiting_for_photo, content_types=['photo'])
-async def process_image(message: types.Message, state):
-    # Получаем данные из состояния
-    user_data = await state.get_data()
-    text = user_data.get('text')  # Извлекаем текст
+            if not os.path.exists('angarinfo.json'):
+                with open('angarinfo.json', 'w', encoding='utf-8') as f:
+                    json.dump([], f)
 
-    # Сохраняем текст в файл 'angar.py' в список park
-    with open('angar.py', 'a') as f:
-        f.write(f"park.append('{text}')\n")  # Добавляем текст в park
+            with open('angarinfo.json', 'r+', encoding='utf-8') as f:
+                json_data = json.load(f)
+                json_data.append(data)
+                f.seek(0)
+                json.dump(json_data, f, ensure_ascii=False, indent=4)
+                f.truncate()
 
-    # Получаем файл изображения
-    photo = message.photo[-1]  # Получаем наибольшее качество изображения
-    file_id = photo.file_id
-    file = await bot.get_file(file_id)
+            await message.reply('Фото сохранено!')
+            await state.clear()
+        except Exception as e:
+            await message.reply('Ошибка при сохранении фото.')
+            await message.answer(str(e))
 
-    # Загружаем изображение и сохраняем его в папку 'bank'
-    await bot.download_file(file.file_path, f'bank/{file.file_path.split("/")[-1]}')
+@dp.message(lambda message: message.content_type != types.ContentType.PHOTO)
+async def no_photo_received(message: types.Message, state: FSMContext):
+    if await state.get_state() == Form.waiting_for_photo:
+        await message.reply('Пожалуйста, отправьте фото самолетика.')
 
-    # Добавляем название изображения в список gallery в 'angar.py'
-    with open('angar.py', 'a') as f:
-        f.write(f"gallery.append('{file.file_path.split('/')[-1]}')\n")  # Добавляем имя изображения в gallery
-
-    # Уведомляем пользователя об успешном добавлении
-    await message.reply("Самолётик добавлен успешно!")
-
-    # Завершаем состояние, чтобы бот мог принимать новые команды
-    await state.finish()
-
-
-@dp.message(state=Form.waiting_for_photo)
-async def process_invalid_image(message: types.Message):
-    # Если пользователь отправил что-то, кроме изображения, уведомляем его об этом
-    await message.reply("Пожалуйста, отправьте изображение самолётика.")
-
-async def start_dp():
+async def main():
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
-    asyncio.run(start_dp())
+    asyncio.run(main())
