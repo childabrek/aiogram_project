@@ -14,37 +14,24 @@ def load_events_from_json():
 events = load_events_from_json()
 
 logging.basicConfig(level=logging.INFO)
+import password
 
 
-
-bot = aiogram.Bot(password.TOKEN)
+bot = aiogram.Bot(token=password.TOKEN)
 dp = Dispatcher()
 user_message_count = defaultdict(int)
 
-peoples = list()
-ludi = set()
 @dp.message(Command("count_vlad"))
 async def count(message: types.Message):
     user_id = message.from_user.id
     user_message_count[user_id] += 1
     username = message.from_user.full_name
-    ludi.add(username[0])
     count = user_message_count[user_id]
-    dad = str(username) + " отправил " + str(count) + " сообщений"
-    if username == "society" or username == "Никита":
+    if username == "society":
         username = "Повелитель " + username
     else:
         username = "Ниндзя " + username
-    peoples.append(dad)
-    print(*peoples)
-    with open("ludi.json", "a", encoding="utf-8") as a:
-        a.write(username + " " + str(count))
-
     await message.reply(f"{username}, ты отправил(а) {count} сообщений.")
-
-@dp.message(Command("vlad"))
-async def tab(message: types.Message):
-    await message.reply(f"{peoples}")
 
 
 @dp.message()
@@ -58,15 +45,7 @@ async def handle_message(message: types.Message):
         response = f"Смешное событие {year} года: {funny_event}\n \nСтрашное событие {year} года: {scary_event}"
         await message.reply(response)
     elif year == "1488":
-        await message.reply('В тюрьму хочешь?')
-        await message.delete()
-
-
-
-
-
-
-
+        await message.reply('Это не смешно, такие "приколы" могут привести к уголовной ответственности.')
 
 @dp.message()
 async def count_messages(message: types.Message):
