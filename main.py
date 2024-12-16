@@ -13,17 +13,17 @@ from password import TOKEN
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(TOKEN)
+bot = Bot(TOKEN)            #----- ТОКЕН
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 
-class Form(StatesGroup):
+class Form(StatesGroup):            #----- Статусы
     waiting_for_name = State()
     waiting_for_text = State()
     waiting_for_photo = State()
     waiting_for_delete_name = State()
 
-@dp.message(Command("help_samoletik"))
+@dp.message(Command("help_samoletik"))            #----- Все доступные команды
 async def help_samoletik(message: types.Message):
     await message.answer("/samoletik - Отправить рандомный самолетик\n"
                          "/help_samoletik - Отправить список всех команд\n"
@@ -31,7 +31,7 @@ async def help_samoletik(message: types.Message):
                          "/delete_samoletik - Удалить самолетик по названию\n"
                          "/add_samoletik - Добавить самолетик")
 
-@dp.message(Command('samoletik'))
+@dp.message(Command('samoletik'))            #----- Рандомный самолетик
 async def get_random_samoletik(message: types.Message):
     try:
         with open('angarinfo.json', 'r', encoding='utf-8') as f:
@@ -48,7 +48,7 @@ async def get_random_samoletik(message: types.Message):
         await message.reply('Ошибка при получении случайного самолетика.')
         await message.answer(str(e))
 
-@dp.message(Command('list_samoletik'))
+@dp.message(Command('list_samoletik'))            #----- общий список доступных самолетиков
 async def listsamoletik(message: types.Message):
     try:
         with open('angarinfo.json', 'r', encoding='utf-8') as f:
@@ -65,7 +65,7 @@ async def listsamoletik(message: types.Message):
         await message.reply('Ошибка при получении списка самолетиков.')
         await message.answer(str(e))
 
-@dp.message(Command('delete_samoletik'))
+@dp.message(Command('delete_samoletik'))            #----- удалить самолетик
 async def delete_samoletik(message: types.Message):
     name_to_delete = message.text.replace('/delete_samoletik', '').strip()
 
@@ -105,12 +105,12 @@ async def delete_samoletik(message: types.Message):
         await message.answer(str(e))
 
 
-@dp.message(Command('add_samoletik'))
+@dp.message(Command('add_samoletik'))            #----- добавить самолетик
 async def add(message: types.Message, state: FSMContext):
     await message.answer('Введите название самолетика')
     await state.set_state(Form.waiting_for_name)
 
-@dp.message(lambda message: message.content_type == types.ContentType.TEXT)
+@dp.message(lambda message: message.content_type == types.ContentType.TEXT)            #----- название нового самолетика
 async def text(message: types.Message, state: FSMContext):
     current_state = await state.get_state()
     if current_state == Form.waiting_for_name:
@@ -118,13 +118,13 @@ async def text(message: types.Message, state: FSMContext):
         await state.update_data(name=name)
         await message.answer('Введите текст о самолетике')
         await state.set_state(Form.waiting_for_text)
-    elif current_state == Form.waiting_for_text:
+    elif current_state == Form.waiting_for_text:            #----- текст нового самолетика
         text = message.text
         await state.update_data(text=text)
         await message.answer('Отправьте фото самолетика')
         await state.set_state(Form.waiting_for_photo)
 
-@dp.message(lambda message: message.content_type == types.ContentType.PHOTO)
+@dp.message(lambda message: message.content_type == types.ContentType.PHOTO)            #----- фото нового самолетика
 async def waiting_for_photo(message: types.Message, state: FSMContext):
     if await state.get_state() == Form.waiting_for_photo:
         try:
@@ -156,7 +156,7 @@ async def waiting_for_photo(message: types.Message, state: FSMContext):
             await message.reply('Ошибка при сохранении фото.')
             await message.answer(str(e))
 
-@dp.message(lambda message: message.content_type != types.ContentType.PHOTO)
+@dp.message(lambda message: message.content_type != types.ContentType.PHOTO)            #----- если не фотка
 async def no_photo_received(message: types.Message, state: FSMContext):
     if await state.get_state() == Form.waiting_for_photo:
         await message.reply('Пожалуйста, отправьте фото самолетика.')
