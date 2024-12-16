@@ -9,27 +9,57 @@ from aiogram import Dispatcher, Bot, F
 from aiogram.filters import Command
 from aiogram.types import FSInputFile, Message, KeyboardButton, ReplyKeyboardMarkup
 
-from Config import HELP, TOKEN, MY_ID
+from Config import TOKEN, MY_ID
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
-Songs = os.listdir('Songs/soad')
+Songs = os.listdir('Groups/soad')
+HELP = '''
+1.
+/startFaezbek - Старт + добавляет кнопки
+
+2.
+/send + Название песни - Получить аудиофайл с песней, например /send Chop suey!, если песня не будет найдена
+бот предложит вам три самые близкие по названию песни
+
+3.
+/list + Параметр + Название группы - Список песен в зависимости от введенного параметра, например /list alph soad
+Параметры:
+alph - Список песен распределенный по алфавиту
+pop - Список песен распределенный по популярности
+fav - Список избранных песен
+
+4.
+/create_fav_dir - Создать собственную папку куда можно добавлять избранные песни
+
+5.
+/add_fav +  Название файла - Добавить песню в избранные, например /add_fav Chop suey!
+/delete_fav + Название файла - Удалить песню из избранных, например /delete_fav Chop suey!, также можно удалять песни по
+их порядковому номеру (/list fav)
+
+6.
+/add + Аудиофайл - Добавить песню
+/cleaner - /cleaner
+'''
 
 
 # Кнопки для бота
 def butt():
-    kb = [[KeyboardButton(text='/helpFaezbek'), KeyboardButton(text='/list_of_songs alph')],
-          [KeyboardButton(text='/list_of_songs pop')],
-          [KeyboardButton(text='/list_of_songs fav')]]
+    kb = [[KeyboardButton(text='/helpFaezbek')], [KeyboardButton(text='/list fav')]]
     keyboard = ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True, one_time_keyboard=True)
     return keyboard
 
 
 # Функция, очищающая ненужные символы в треках
-def cleaner():
-    for file in os.listdir('Songs/soad'):
-        q = file.replace('System_of_a_Down_-_', '')
+def cleaner(group):
+    for file in os.listdir(f'Groups/{group}'):
+        if file.startswith('list of'):
+            continue
+        if group == 'soad':
+            q = file.replace('System_of_a_Down_-_', '')
+        if group == 'slipknot':
+            q = file.replace('Slipknot_-_', '')
         for letter1 in file:
             try:
                 if letter1 == '(':
@@ -45,16 +75,18 @@ def cleaner():
             q += '3'
         if q[len(q) - 5] == ' ':
             q = q[::-1].replace(" ", "", 1)[::-1]
-        os.rename(f'Songs/soad/{file}', f'Songs/soad/{q}')
+        os.rename(f'Groups/{group}/{file}', f'Groups/{group}/{q}')
 
 
-def alph():
+def alph(group):
     lis = []
     q = 0
     alph1 = ''
-    for file in os.listdir('Songs/soad'):
+    for file in os.listdir(f'Groups/{group}'):
+        if file.startswith('list of'):
+            continue
         lis.append(file + '\n')
-    with open('Songs/List of songs - alph', 'w') as a:
+    with open(f'Groups/{group}/list of songs - alph', 'a') as a:
         for i in lis:
             while True:
                 q += 1
@@ -65,19 +97,18 @@ def alph():
     return alph1
 
 
-def pop():
-    with open('Songs/List of songs - pop', 'r') as a:
+def pop(group):
+    with open(f'Groups/{group}/list of songs - pop', 'r') as a:
         lis = []
         q = 0
         pop1 = ''
         for name in a:
             lis.append(name)
         for i in lis:
-            while True:
-                q += 1
-                break
+            q += 1
             i = i.replace('.mp3', '')
-            pop1 += i
+            i1 = f'{q}. {i}'
+            pop1 += i1
     return pop1
 
 
@@ -85,7 +116,7 @@ def fav(message):
     q = 0
     user_id = message.from_user.id
     fav1 = ''
-    for j in os.listdir(f'Songs/Fav/{user_id}'):
+    for j in os.listdir(f'Groups/1Fav/{user_id}'):
         while True:
             q += 1
             break
@@ -97,7 +128,8 @@ def fav(message):
 @dp.message(Command('cleaner'))
 async def clean(message):
     if message.from_user.id == MY_ID:
-        cleaner()
+        mess = message.text.replace('/cleaner ', '')
+        cleaner(mess)
         await message.answer('BOY\nNEXT DOOR')
     else:
         await message.answer('.')
@@ -113,20 +145,20 @@ async def button(message):
 @dp.message(Command('create_fav_dir'))
 async def create_fav(message):
     try:
-        os.mkdir(f'Songs/Fav/{message.from_user.id}')
+        os.mkdir(f'Groups/1Fav/{message.from_user.id}')
         await message.reply('Успешно')
     except FileExistsError:
         await message.reply('Вы уже создавали папку')
 
 
 # Удалить директорию для избранных песен
-@dp.message(Command('delete_fav_dir'))
-async def delete_fav(message):
-    try:
-        os.removedirs(f'Songs/Fav/{message.from_user.id}')
-        await message.reply('Успешно')
-    except FileNotFoundError:
-        await message.reply('Вы еще не создали папку (/create_fav_dir)')
+# @dp.message(Command('delete_fav_dir'))
+# async def delete_fav(message):
+#     try:
+#         os.removedirs(f'Groups/1Fav/{message.from_user.id}')
+#         await message.reply('Успешно')
+#     except FileNotFoundError:
+#         await message.reply('Вы еще не создали папку (/create_fav_dir)')
 
 
 # Добавить песню в избранные
@@ -135,34 +167,42 @@ async def add_to_favorite(message):
     try:
         flag = True
         user_id = message.from_user.id
-        for q in os.listdir('Songs/Fav'):
+        for q in os.listdir('Groups/1Fav'):
             if str(user_id) == q:
                 break
         else:
             flag = False
         if flag is True:
             messag = message.text.replace('/add_fav ', '') + '.mp3'
-            for i in os.listdir('Songs/soad'):
-                messag1 = messag.replace(' ', '')
-                i1 = i.replace(' ', '')
-                if messag1.lower() == i1.lower():
-                    if len(os.listdir()) > 0:
-                        for w in os.listdir(f'Songs/Fav/{user_id}'):
-                            if i == w:
-                                await message.reply('Песня уже находится в избранных')
+            for i in os.listdir('Groups'):
+                if i == '1Fav':
+                    continue
+                if flag is False:
+                    break
+                for a in os.listdir(f'Groups/{i}'):
+                    messag1 = messag.replace(' ', '')
+                    a1 = a.replace(' ', '')
+                    if messag1.lower() == a1.lower():
+                        if len(os.listdir()) > 0:
+                            for w in os.listdir(f'Groups/1Fav/{user_id}'):
+                                if a == w:
+                                    await message.reply('Песня уже находится в избранных')
+                                    flag = False
+                                    break
+                            else:
+                                with open(f'Groups/1Fav/{user_id}/{a}', 'a'):
+                                    pass
+                                await message.reply('Успешно')
+                                flag = False
                                 break
                         else:
-                            with open(f'Songs/Fav/{user_id}/{i}', 'a'):
+                            with open(f'Groups/1Fav/{user_id}/{a}', 'a'):
                                 pass
                             await message.reply('Успешно')
+                            flag = False
                             break
-                    else:
-                        with open(f'Songs/Fav/{user_id}/{i}', 'a'):
-                            pass
-                        await message.reply('Успешно')
                         break
-                    break
-            else:
+            if flag is True:
                 await message.reply('Песня не найдена')
         else:
             raise FileNotFoundError
@@ -179,20 +219,20 @@ async def delete_favorite(message):
         try:
             messag2 = messag.replace('.mp3', '')
             if type(int(messag2)) == int:
-                for i in os.listdir(f'Songs/Fav/{message.from_user.id}'):
+                for i in os.listdir(f'Groups/1Fav/{message.from_user.id}'):
                     w += 1
                     if int(messag2) == w:
-                        os.remove(f'Songs/Fav/{message.from_user.id}/{i}')
+                        os.remove(f'Groups/1Fav/{message.from_user.id}/{i}')
                         await message.reply('Успешно')
                         break
                 else:
                     await message.reply('Песня не найдена')
         except ValueError:
-            for i in os.listdir(f'Songs/Fav/{message.from_user.id}'):
+            for i in os.listdir(f'Groups/1Fav/{message.from_user.id}'):
                 messag1 = messag.replace(' ', '')
                 i1 = i.replace(' ', '')
                 if messag1.lower() == i1.lower():
-                    os.remove(f'Songs/Fav/{message.from_user.id}/{i}')
+                    os.remove(f'Groups/1Fav/{message.from_user.id}/{i}')
                     await message.reply('Успешно')
                     break
             else:
@@ -205,16 +245,17 @@ async def delete_favorite(message):
 @dp.message(F.audio, Command('add'))
 async def add_music(message: Message):
     if message.from_user.id == MY_ID:
+        mess = message.text.replace('/add ', '')
         await message.answer('BOY')
         audio = message.audio
         file_id = audio.file_id
         file = await message.bot.get_file(file_id)
-        path = rf"Songs/soad\{message.audio.file_name}"
+        path = rf"Groups/soad\{message.audio.file_name}"
         await message.bot.download_file(file.file_path, path)
         await message.answer('NEXT DOOR')
     else:
         await message.answer('Вам нельзя добавлять файлы')
-    cleaner()
+    cleaner(mess)
 
 
 # Функция для удаления аудиофайлов из папки
@@ -222,11 +263,11 @@ async def add_music(message: Message):
 async def del_music(message: Message):
     mess = message.text.replace('/del ', '') + '.mp3'
     if message.from_user.id == MY_ID:
-        for i in os.listdir('Songs/soad'):
+        for i in os.listdir('Groups/soad'):
             mess = mess.replace(' ', '')
             i1 = i.replace(' ', '')
             if mess.lower() == i1.lower():
-                os.remove(f'Songs/soad/{i}')
+                os.remove(f'Groups/soad/{i}')
                 await message.reply('Успешно')
                 break
         else:
@@ -242,14 +283,20 @@ async def help1(message):
 
 
 # Функция вывода списка песен
-@dp.message(Command('list_of_songs'))
+@dp.message(Command('list'))
 async def gachi(message):
     messag = message.text
-    messag = messag.replace('/list_of_songs ', '')
+    messag1 = message.text
+    if message.text.startswith('/list alph'):
+        group = message.text.replace('/list alph ', '')
+    else:
+        group = messag1.replace('/list pop ', '')
+    messag = messag.replace(f'/list ', '')
+    messag = messag.replace(f' {group}', '')
     if messag == 'alph':
-        await message.reply(alph())
+        await message.reply(alph(group))
     if messag == 'pop':
-        await message.reply(pop())
+        await message.reply(pop(group))
     try:
         if messag == 'fav':
             await message.reply(fav(message))
@@ -261,9 +308,9 @@ async def gachi(message):
 
 # Функция отправки песен
 try:
-    @dp.message(Command('send_music'))
+    @dp.message(Command('send'))
     async def music(message):
-        mess = message.text.replace('/send_music', '')
+        mess = message.text.replace('/send', '')
         list_cons = []
         f = True
         if mess == '':
@@ -273,20 +320,26 @@ try:
         mess2 = mess.replace('.mp3', '')
         if mess2.lower() == 'random':
             song = choice(Songs)
-            file = FSInputFile(f'Songs/soad/{song}')
+            file = FSInputFile(f'Groups/soad/{song}')
             await message.reply_document(file)
         else:
             mess = mess + '.mp3'
             mess1 = mess.replace(' ', '')
-            for name in os.listdir('Songs/soad'):
-                name1 = name.replace(' ', '')
-                if mess1.lower() == name1.lower():
-                    file = FSInputFile(f'Songs/soad/{name}')
-                    await message.answer_document(file)
+            for group in os.listdir('Groups'):
+                if group == '1Fav':
+                    continue
+                if f is False:
                     break
+                for name in os.listdir(f'Groups/{group}'):
+                    name1 = name.replace(' ', '')
+                    if mess1.lower() == name1.lower():
+                        file = FSInputFile(f'Groups/{group}/{name}')
+                        await message.answer_document(file)
+                        f = False
+                        break
             else:
                 if f is True:
-                    for i in os.listdir('Songs/soad'):
+                    for i in os.listdir(f'Groups/{group}'):
                         count_of_coincidence = 0
                         b = -1
                         try:
