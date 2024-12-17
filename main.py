@@ -4,7 +4,6 @@ from datetime import date, timedelta
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from pytz import utc
 
 logging.basicConfig(level=logging.INFO)
 TOKEN = "7694855874:AAGptMKWQ1OsSN_sncjbtPKrPHZs-Byczio"
@@ -20,7 +19,7 @@ current_date = date.today()
 counter = 0
 
 scheduler = AsyncIOScheduler()
-scheduler.configure(timezone=utc)
+scheduler.configure(timezone='Asia/Yekaterinburg')
 
 
 async def check_and_send_duty(message: types.Message):
@@ -38,7 +37,7 @@ async def check_and_send_duty(message: types.Message):
 
 @dp.message(Command("startSophie"))
 async def start_command_handler(message: types.Message):
-    await check_and_send_duty(message)
+    await message.reply('Напоминание о дежурных включено')
     scheduler.add_job(check_and_send_duty, 'cron', hour=13, minute=00, args=[message])
 
 
