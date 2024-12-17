@@ -39,7 +39,7 @@ async def check_and_send_duty(message: types.Message):
 @dp.message(Command("startSophie"))
 async def start_command_handler(message: types.Message):
     await message.reply('Напоминание о дежурных включено')
-    scheduler.add_job(check_and_send_duty, 'cron', hour=10, minute=42, args=[message])
+    scheduler.add_job(check_and_send_duty, 'cron', hour=13, minute=00, args=[message])
 
 
 async def start_db():
