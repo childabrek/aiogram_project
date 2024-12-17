@@ -1,14 +1,15 @@
 import logging
 import asyncio
+import password
 from datetime import date, timedelta
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 logging.basicConfig(level=logging.INFO)
-TOKEN = "7694855874:AAGptMKWQ1OsSN_sncjbtPKrPHZs-Byczio"
 
-bot = Bot(token=TOKEN)
+
+bot = Bot(token=password.TOKEN)
 dp = Dispatcher()
 
 duty = ["Хаял", "Влад", "Данила", "Кирилл", "Арслан", "Ярослав", "Артем Карпенко",
@@ -38,7 +39,7 @@ async def check_and_send_duty(message: types.Message):
 @dp.message(Command("startSophie"))
 async def start_command_handler(message: types.Message):
     await message.reply('Напоминание о дежурных включено')
-    scheduler.add_job(check_and_send_duty, 'cron', hour=13, minute=00, args=[message])
+    scheduler.add_job(check_and_send_duty, 'cron', hour=10, minute=42, args=[message])
 
 
 async def start_db():
