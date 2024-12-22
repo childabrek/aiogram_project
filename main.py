@@ -2,23 +2,24 @@ import json
 import logging
 import os
 import random
+import sys
 from datetime import datetime, timedelta
+import parsing
 
 import password
 import asyncio
 import json
 import aiogram
 import requests
-from aiogram import Dispatcher, Bot, types
+from aiogram import Dispatcher, Bot, types, Router, BaseMiddleware
 from aiogram.filters import Command
-from aiogram.types import FSInputFile, inline_query_results_button, ReplyKeyboardMarkup
+from aiogram.types import FSInputFile, inline_query_results_button, ReplyKeyboardMarkup, Message
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.storage.memory import MemoryStorage
 from collections import defaultdict
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pytz import utc
 # Тут все токены логины и пароли
-import password
 
 # инит бота
 logging.basicConfig(level=logging.INFO)
@@ -33,6 +34,29 @@ user_message_count = defaultdict(int)
 scheduler = AsyncIOScheduler()
 scheduler.configure(timezone=utc)
 
+#Миддлварь и роутер Розы
+hello_router = Router(name='hello')
+
+
+class SchedulerMiddleware(BaseMiddleware):
+    def __init__(self, scheduler1: AsyncIOScheduler):
+        super().__init__()
+        self._scheduler = scheduler1
+
+    async def __call__(self, handler, event, data):
+        data["scheduler"] = self._scheduler
+        return await handler(event, data)
+
+#Функция Розы
+
+@hello_router.message(Command(commands=["dueToday"]))
+async def hello(message: Message, bot: Bot, scheduler: AsyncIOScheduler):
+    id = -1002249502986
+    await message.answer(
+        text="Отправка напоминаний о дедлайнах включена!"
+    )
+    scheduler.add_job(bot.send_message, 'cron',day_of_week='mon-fri', hour=7, minute=30, args=(id, f"Сегодня истекают следующие домашние задания: \n"
+                                                                                                   f"{parsing.final_output}"))
 
 # код Владислава
 def load_events_from_json():
@@ -505,6 +529,12 @@ async def count_messages(message: types.Message):
 
 
 async def main():
+    scheduler1 = AsyncIOScheduler(timezone='Asia/Yekaterinburg')
+    scheduler1.start()
+    dp.update.middleware(
+        SchedulerMiddleware(scheduler1=scheduler1),
+    )
+    dp.include_routers(hello_router)
     await bot.delete_webhook()
     await dp.start_polling(bot)
 
